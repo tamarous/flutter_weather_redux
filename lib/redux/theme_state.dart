@@ -10,4 +10,11 @@ class ThemeState extends Equatable {
     @required this.color,
   })  : assert(theme != null, color != null),
         super([theme, color]);
+
+  factory ThemeState.initial() => ThemeState(
+        theme: ThemeData(
+          primaryColor: Colors.white,
+        ),
+        color: Colors.lightBlue,
+      );
 }

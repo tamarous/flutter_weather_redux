@@ -11,7 +11,7 @@ class WeatherChangedAction {
   WeatherChangedAction({@required this.condition}) : assert(condition != null);
 }
 
-final weatherChangeReducer = combineReducers<ThemeState>([
+final themeChangeReducer = combineReducers<ThemeState>([
   TypedReducer<ThemeState, WeatherChangedAction>(onWeatherChange),
 ]);
 

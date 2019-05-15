@@ -2,9 +2,10 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_redux/flutter_redux.dart';
-import 'package:flutter_weather_redux/redux/redux.dart';
+import 'package:flutter_weather_redux/redux/redux_exports.dart';
 import 'package:flutter_weather_redux/widgets/combined_weather_temperature.dart';
 import 'package:flutter_weather_redux/widgets/widgets.dart';
+import 'package:redux/redux.dart';
 
 class Weather extends StatefulWidget {
   @override
@@ -21,7 +22,7 @@ class _WeatherState extends State<Weather> {
     _refreshCompleter = Completer<void>();
   }
 
-  Widget buildBody(WeatherState state) {
+  Widget buildBody(WeatherState state, Store<GlobalState> store) {
     if (state.isEmpty) {
       return Center(
         child: Text('Please select a location'),
@@ -33,6 +34,9 @@ class _WeatherState extends State<Weather> {
       );
     }
     if (state.hasLoaded) {
+      _refreshCompleter?.complete();
+      _refreshCompleter = Completer();
+
       final weather = state.weather;
       return GradientContainer(
         color: Colors.blue,
@@ -62,7 +66,10 @@ class _WeatherState extends State<Weather> {
               ),
             ],
           ),
-          onRefresh: () {},
+          onRefresh: () {
+            store.dispatch(refreshWeatherAction(state.weather.location));
+            return _refreshCompleter.future;
+          },
         ),
       );
     }
@@ -81,11 +88,11 @@ class _WeatherState extends State<Weather> {
 
   @override
   Widget build(BuildContext context) {
-    final store = StoreProvider.of<WeatherState>(context);
+    final store = StoreProvider.of<GlobalState>(context);
 
-    return StoreConnector<WeatherState, SearchScreenViewModel>(
+    return StoreConnector<GlobalState, SearchScreenViewModel>(
       converter: (store) {
-        return SearchScreenViewModel(state: store.state);
+        return SearchScreenViewModel(state: store.state.weatherState);
       },
       builder: (BuildContext context, SearchScreenViewModel vm) {
         return Scaffold(
@@ -116,7 +123,7 @@ class _WeatherState extends State<Weather> {
               )
             ],
           ),
-          body: buildBody(vm.state),
+          body: buildBody(vm.state, store),
         );
       },
     );

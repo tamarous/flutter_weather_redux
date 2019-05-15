@@ -1,5 +1,5 @@
 import 'package:flutter_weather_redux/models/models.dart';
-import 'package:flutter_weather_redux/redux/weather_state.dart';
+import 'package:flutter_weather_redux/redux/redux_exports.dart';
 import 'package:flutter_weather_redux/repositories/repositories.dart';
 import 'package:http/http.dart' as http;
 import 'package:redux/redux.dart';
@@ -19,16 +19,34 @@ class SearchResultAction {
   SearchResultAction(this.weather);
 }
 
-final searchReducer = combineReducers<WeatherState>([
+final weatherSearchReducer = combineReducers<WeatherState>([
   TypedReducer<WeatherState, SearchLoadingAction>(_onLoad),
   TypedReducer<WeatherState, SearchErrorAction>(_onError),
   TypedReducer<WeatherState, SearchResultAction>(_onResult),
 ]);
 
-ThunkAction<WeatherState> searchWeatherAction(String city) {
-  return (Store<WeatherState> store) async {
+ThunkAction<GlobalState> searchWeatherAction(String city) {
+  return (Store<GlobalState> store) async {
     store.dispatch(SearchLoadingAction());
 
+    WeatherApiClient weatherApiClient =
+        WeatherApiClient(httpClient: http.Client());
+
+    WeatherRepository repository =
+        WeatherRepository(weatherApiClient: weatherApiClient);
+
+    try {
+      Weather weather = await repository.getWeather(city);
+      store.dispatch(SearchResultAction(weather));
+    } catch (e) {
+      print(e.toString());
+      store.dispatch(SearchErrorAction());
+    }
+  };
+}
+
+ThunkAction<GlobalState> refreshWeatherAction(String city) {
+  return (Store<GlobalState> store) async {
     WeatherApiClient weatherApiClient =
         WeatherApiClient(httpClient: http.Client());
 
