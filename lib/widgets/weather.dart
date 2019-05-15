@@ -3,17 +3,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_redux/flutter_redux.dart';
 import 'package:flutter_weather_redux/redux/redux.dart';
-import 'package:flutter_weather_redux/repositories/repositories.dart';
 import 'package:flutter_weather_redux/widgets/combined_weather_temperature.dart';
 import 'package:flutter_weather_redux/widgets/widgets.dart';
 
 class Weather extends StatefulWidget {
-  final WeatherRepository weatherRepository;
-
-  Weather({Key key, @required this.weatherRepository})
-      : assert(weatherRepository != null),
-        super(key: key);
-
   @override
   State<Weather> createState() => _WeatherState();
 }
