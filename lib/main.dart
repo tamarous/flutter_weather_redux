@@ -36,7 +36,7 @@ class _MyAppState extends State<MyApp> {
       child: MaterialApp(
         title: 'Flutter Weather',
         theme: widget.store.state.themeState.theme,
-        home: Weather(),
+        home: WeatherPage(),
       ),
     );
   }

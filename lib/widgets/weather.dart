@@ -2,18 +2,21 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_redux/flutter_redux.dart';
+import 'package:flutter_weather_redux/models/models.dart';
 import 'package:flutter_weather_redux/redux/redux_exports.dart';
 import 'package:flutter_weather_redux/widgets/combined_weather_temperature.dart';
 import 'package:flutter_weather_redux/widgets/widgets.dart';
 import 'package:redux/redux.dart';
 
-class Weather extends StatefulWidget {
+class WeatherPage extends StatefulWidget {
   @override
-  State<Weather> createState() => _WeatherState();
+  State<WeatherPage> createState() => _WeatherPageState();
 }
 
-class _WeatherState extends State<Weather> {
+class _WeatherPageState extends State<WeatherPage> {
   Completer<void> _refreshCompleter;
+
+  Weather previousWeather;
 
   @override
   void initState() {
@@ -22,24 +25,35 @@ class _WeatherState extends State<Weather> {
     _refreshCompleter = Completer<void>();
   }
 
-  Widget buildBody(WeatherState state, Store<GlobalState> store) {
-    if (state.isEmpty) {
+  Widget buildBody(GlobalState state, Store<GlobalState> store) {
+    if (state.weatherState.isEmpty) {
       return Center(
         child: Text('Please select a location'),
       );
     }
-    if (state.isLoading) {
+    if (state.weatherState.isLoading) {
       return Center(
         child: CircularProgressIndicator(),
       );
     }
-    if (state.hasLoaded) {
+    if (state.weatherState.hasLoaded) {
       _refreshCompleter?.complete();
       _refreshCompleter = Completer();
 
-      final weather = state.weather;
+      final weather = state.weatherState.weather;
+
+      if (previousWeather != null) {
+        Weather currentWeather = weather;
+        if (currentWeather.condition != previousWeather.condition) {
+          store.dispatch(
+              WeatherChangedAction(condition: currentWeather.condition));
+        }
+      }
+
+      previousWeather = weather;
+
       return GradientContainer(
-        color: Colors.blue,
+        color: state.themeState.color,
         child: RefreshIndicator(
           child: ListView(
             children: <Widget>[
@@ -67,13 +81,14 @@ class _WeatherState extends State<Weather> {
             ],
           ),
           onRefresh: () {
-            store.dispatch(refreshWeatherAction(state.weather.location));
+            store.dispatch(
+                refreshWeatherAction(state.weatherState.weather.location));
             return _refreshCompleter.future;
           },
         ),
       );
     }
-    if (state.hasError) {
+    if (state.weatherState.hasError) {
       return Center(
         child: Text(
           'Something went wrong',
@@ -92,7 +107,7 @@ class _WeatherState extends State<Weather> {
 
     return StoreConnector<GlobalState, SearchScreenViewModel>(
       converter: (store) {
-        return SearchScreenViewModel(state: store.state.weatherState);
+        return SearchScreenViewModel(state: store.state);
       },
       builder: (BuildContext context, SearchScreenViewModel vm) {
         return Scaffold(
@@ -131,6 +146,6 @@ class _WeatherState extends State<Weather> {
 }
 
 class SearchScreenViewModel {
-  final WeatherState state;
+  final GlobalState state;
   SearchScreenViewModel({this.state});
 }
